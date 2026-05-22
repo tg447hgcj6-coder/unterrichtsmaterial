@@ -7,8 +7,11 @@ on:
     paths:
       - '**.html'
       - 'generate_index.py'
-      - '.github/workflows/generate-index.yml'
   workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
 
 jobs:
   generate-index:
@@ -16,34 +19,40 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       
       - name: Run index generator
         run: python generate_index.py
       
-      - name: Check if index.html changed
-        id: verify
+      - name: Check if index.html exists and changed
+        id: check
         run: |
-          if git diff --quiet index.html; then
-            echo "No changes to index.html"
-            echo "changed=false" >> $GITHUB_OUTPUT
+          if [ -f index.html ]; then
+            echo "Index file created successfully"
+            echo "exists=true" >> $GITHUB_OUTPUT
+            if git diff --quiet index.html 2>/dev/null; then
+              echo "changed=false" >> $GITHUB_OUTPUT
+            else
+              echo "changed=true" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "index.html has been updated"
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "ERROR: index.html was not created!"
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> $GITHUB_OUTPUT
           fi
       
       - name: Commit and push changes
-        if: steps.verify.outputs.changed == 'true'
+        if: steps.check.outputs.exists == 'true' && steps.check.outputs.changed == 'true'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html
           git commit -m "🤖 Auto-generate index.html"
           git push
