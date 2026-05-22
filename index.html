@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unterrichtsmaterial - Übersicht</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .file-list {
+            list-style: none;
+        }
+        
+        .file-item {
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .file-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .file-item a {
+            text-decoration: none;
+            color: #333;
+            font-size: 1.1em;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .file-item a:hover {
+            color: #667eea;
+        }
+        
+        .file-path {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 1.1em;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .file-item a {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Unterrichtsmaterial</h1>
+            <p class="subtitle">Übersicht aller verfügbaren Materialien</p>
+        </header>
+        
+        <div class="content">
+            <ul class="file-list">
+                <li class="file-item">
+                    <a href="dur-und-moll-lernmodul.html">Dur Und Moll Lernmodul</a>
+                    <div class="file-path">dur-und-moll-lernmodul.html</div>
+                </li>
+                <li class="file-item">
+                    <a href="dur-und-moll-lernmodul%202.html">Dur Und Moll Lernmodul 2</a>
+                    <div class="file-path">dur-und-moll-lernmodul 2.html</div>
+                </li>
+            </ul>
+        </div>
+        
+        <footer>
+            <p>Zuletzt aktualisiert: 2026-05-22</p>
+        </footer>
+    </div>
+</body>
+</html>
