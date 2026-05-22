@@ -1,0 +1,49 @@
+name: Generate Index
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.html'
+      - 'generate_index.py'
+      - '.github/workflows/generate-index.yml'
+  workflow_dispatch:
+
+jobs:
+  generate-index:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Run index generator
+        run: python generate_index.py
+      
+      - name: Check if index.html changed
+        id: verify
+        run: |
+          if git diff --quiet index.html; then
+            echo "No changes to index.html"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "index.html has been updated"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit and push changes
+        if: steps.verify.outputs.changed == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add index.html
+          git commit -m "🤖 Auto-generate index.html"
+          git push
