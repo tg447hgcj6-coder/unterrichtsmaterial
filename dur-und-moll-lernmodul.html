@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Dur & Moll – Interaktives Lernmodul</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600&display=swap');
+
+  :root {
+    --dur: #e8a020;
+    --dur-light: #fdf3e0;
+    --dur-dark: #b07010;
+    --moll: #4a6fa5;
+    --moll-light: #e0e8f5;
+    --moll-dark: #2a4a7a;
+    --bg: #faf8f5;
+    --text: #1a1612;
+    --text-light: #6b6560;
+    --card: #ffffff;
+    --border: #e5e0d8;
+    --correct: #2d7a4f;
+    --wrong: #b03030;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #1a1612 0%, #2d2520 100%);
+    color: white;
+    padding: 24px 20px 20px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  header h1 span.dur { color: var(--dur); }
+  header h1 span.moll { color: #7aaae8; }
+  header p { font-size: 0.85rem; color: #aaa; margin-top: 4px; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    background: #333;
+    height: 6px;
+    margin-top: 12px;
+    border-radius: 3px;
+    overflow: hidden;
+    max-width: 400px;
+    margin-inline: auto;
+    margin-top: 10px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--dur), var(--moll));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* ── NAVIGATION TABS ── */
+  nav.tabs {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    background: #f0ede8;
+    border-bottom: 1px solid var(--border);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  nav.tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 24px;
+    border: none;
+    background: white;
+    color: var(--text-light);
+    font-size: 0.82rem;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    border: 1.5px solid transparent;
+  }
+  .tab-btn:hover { border-color: var(--border); color: var(--text); }
+  .tab-btn.active {
+    background: var(--text);
+    color: white;
+    border-color: var(--text);
+  }
+  .tab-btn .tab-icon { margin-right: 5px; }
+  .tab-btn .done-mark { margin-left: 5px; color: #4CAF50; }
+
+  /* ── MAIN ── */
+  main { padding: 20px 16px 40px; max-width: 700px; margin: 0 auto; }
+
+  .section { display: none; animation: fadeIn 0.4s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+  .card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    color: var(--text);
+  }
+  .card p, .card li { color: #333; margin-bottom: 8px; }
+  .card ul { padding-left: 20px; }
+  .card li { margin-bottom: 6px; }
+
+  /* ── DUR / MOLL SPLIT CARDS ── */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  @media (max-width: 500px) { .split { grid-template-columns: 1fr; } }
+  .dur-card { background: var(--dur-light); border: 2px solid var(--dur); border-radius: var(--radius); padding: 18px; }
+  .moll-card { background: var(--moll-light); border: 2px solid var(--moll); border-radius: var(--radius); padding: 18px; }
+  .dur-card h3 { color: var(--dur-dark); font-family: 'Playfair Display', serif; }
+  .moll-card h3 { color: var(--moll-dark); font-family: 'Playfair Display', serif; }
+
+  /* ── PIANO KEYBOARD ── */
+  .piano-wrap { overflow-x: auto; margin: 16px 0; }
+  .piano {
+    position: relative;
+    height: 130px;
+    display: flex;
+    user-select: none;
+    min-width: 360px;
+  }
+  .white-key {
+    width: 44px;
+    height: 130px;
+    background: white;
+    border: 1.5px solid #bbb;
+    border-radius: 0 0 6px 6px;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.1s;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+    font-size: 0.72rem;
+    color: #999;
+    font-weight: 600;
+  }
+  .white-key:hover { background: #f0f0f0; }
+  .white-key.dur-note { background: #fde68a !important; border-color: var(--dur); }
+  .white-key.moll-note { background: #bfdbfe !important; border-color: var(--moll); }
+  .white-key.root-note { background: var(--dur) !important; color: white; border-color: var(--dur-dark); }
+  .white-key.root-moll { background: var(--moll) !important; color: white; border-color: var(--moll-dark); }
+  .white-key.pressed { background: #ddd !important; transform: scaleY(0.97); }
+
+  .black-key {
+    position: absolute;
+    width: 28px;
+    height: 82px;
+    background: #1a1612;
+    border-radius: 0 0 4px 4px;
+    cursor: pointer;
+    z-index: 2;
+    top: 0;
+    transition: background 0.1s;
+  }
+  .black-key:hover { background: #333; }
+  .black-key.dur-note { background: #d97706 !important; }
+  .black-key.moll-note { background: #3b82f6 !important; }
+  .black-key.pressed { background: #555 !important; }
+
+  /* ── AUDIO PLAY BUTTONS ── */
+  .play-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: none;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 6px 6px 6px 0;
+  }
+  .play-btn.dur { background: var(--dur); color: white; }
+  .play-btn.moll { background: var(--moll); color: white; }
+  .play-btn.neutral { background: var(--text); color: white; }
+  .play-btn:hover { transform: scale(1.04); box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+  .play-btn:active { transform: scale(0.98); }
+  .play-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── INFO BOX ── */
+  .info-box {
+    background: #f0f4ff;
+    border-left: 4px solid var(--moll);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 0.92rem;
+  }
+  .info-box.dur { background: #fff8e8; border-left-color: var(--dur); }
+  .info-box strong { display: block; margin-bottom: 4px; }
+
+  /* ── SCALE VISUALIZATION ── */
+  .scale-steps {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 14px 0;
+    align-items: center;
+  }
+  .step {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .step:hover { transform: scale(1.1); }
+  .step.active-s { box-shadow: 0 0 0 3px white, 0 0 0 5px currentColor; transform: scale(1.15); }
+  .step-arrow { font-size: 1.2rem; color: var(--text-light); }
+
+  /* ── QUIZ ── */
+  .quiz-question {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .quiz-options { display: grid; gap: 10px; }
+  .quiz-opt {
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: white;
+    cursor: pointer;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.95rem;
+    text-align: left;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--moll); background: var(--moll-light); }
+  .quiz-opt.correct { background: #d1fae5; border-color: var(--correct); color: var(--correct); font-weight: 700; }
+  .quiz-opt.wrong { background: #fee2e2; border-color: var(--wrong); color: var(--wrong); }
+  .quiz-opt:disabled { cursor: not-allowed; }
+
+  .quiz-feedback {
+    margin-top: 14px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-weight: 600;
+    display: none;
+    font-size: 0.95rem;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct { background: #d1fae5; color: var(--correct); }
+  .quiz-feedback.wrong { background: #fee2e2; color: var(--wrong); }
+
+  .quiz-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    padding: 10px 24px;
+    border-radius: 50px;
+    border: none;
+    background: var(--text);
+    color: white;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: #333; transform: scale(1.03); }
+  .btn-secondary {
+    padding: 10px 24px;
+    border-radius: 50px;
+    border: 2px solid var(--border);
+    background: white;
+    color: var(--text);
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--text); }
+
+  .quiz-counter {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-left: auto;
+  }
+  .score-display {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    background: var(--dur-light);
+    border-radius: 20px;
+    color: var(--dur-dark);
+  }
+
+  /* ── STIMMUNGSÜBUNG ── */
+  .emoji-choice { display: flex; gap: 14px; flex-wrap: wrap; margin: 14px 0; }
+  .emoji-btn {
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    background: white;
+    font-size: 1.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    min-width: 80px;
+  }
+  .emoji-btn span { display: block; font-size: 0.72rem; font-family: 'Source Sans 3', sans-serif; color: var(--text-light); margin-top: 4px; }
+  .emoji-btn:hover { border-color: var(--moll); transform: scale(1.08); }
+  .emoji-btn.selected { border-color: var(--dur); background: var(--dur-light); }
+
+  /* ── DRAG & DROP EXERCISE ── */
+  .drag-container { display: flex; gap: 16px; flex-wrap: wrap; }
+  .drag-pool {
+    flex: 1;
+    min-width: 140px;
+    background: #f5f3f0;
+    border-radius: 12px;
+    padding: 14px;
+    min-height: 60px;
+  }
+  .drag-pool h4 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); margin-bottom: 10px; }
+  .drag-target {
+    flex: 1;
+    min-width: 140px;
+    border-radius: 12px;
+    padding: 14px;
+    min-height: 80px;
+    border: 2px dashed;
+  }
+  .drag-target.dur-t { border-color: var(--dur); background: var(--dur-light); }
+  .drag-target.moll-t { border-color: var(--moll); background: var(--moll-light); }
+  .drag-target h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; }
+  .drag-target.dur-t h4 { color: var(--dur-dark); }
+  .drag-target.moll-t h4 { color: var(--moll-dark); }
+  .drag-chip {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: white;
+    border: 1.5px solid var(--border);
+    font-size: 0.88rem;
+    cursor: grab;
+    margin: 4px;
+    user-select: none;
+    transition: transform 0.1s, box-shadow 0.1s;
+    touch-action: none;
+  }
+  .drag-chip:active { cursor: grabbing; transform: scale(1.05); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+  .drag-chip.placed-dur { background: var(--dur-light); border-color: var(--dur); }
+  .drag-chip.placed-moll { background: var(--moll-light); border-color: var(--moll); }
+  .drag-check-result { margin-top: 12px; padding: 12px 16px; border-radius: 10px; display: none; font-weight: 600; }
+  .drag-check-result.show { display: block; }
+
+  /* ── FILL IN BLANKS ── */
+  .fill-blank {
+    font-size: 1rem;
+    line-height: 2.2;
+    margin: 14px 0;
+  }
+  .blank-input {
+    border: none;
+    border-bottom: 2.5px solid var(--text);
+    width: 100px;
+    text-align: center;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.95rem;
+    padding: 2px 4px;
+    background: transparent;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .blank-input:focus { border-bottom-color: var(--moll); }
+  .blank-input.correct-in { border-bottom-color: var(--correct); color: var(--correct); }
+  .blank-input.wrong-in { border-bottom-color: var(--wrong); color: var(--wrong); }
+
+  /* ── RESULTS SCREEN ── */
+  .result-screen {
+    text-align: center;
+    padding: 30px 20px;
+  }
+  .result-score-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--dur), var(--moll));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 10px 0;
+  }
+  .medal { font-size: 4rem; margin-bottom: 10px; }
+  .result-msg { font-size: 1.1rem; color: var(--text-light); max-width: 400px; margin: 0 auto 24px; }
+
+  /* ── TIMER ── */
+  .timer-wrap {
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin-top: 8px;
+  }
+  .timer-wrap span { font-weight: 700; color: var(--text); }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .section-header p { font-size: 0.85rem; color: var(--text-light); margin-top: 2px; }
+
+  /* ── WAVEFORM VISUALIZER ── */
+  #waveform-canvas {
+    width: 100%;
+    height: 60px;
+    border-radius: 8px;
+    background: #1a1612;
+    display: block;
+    margin: 10px 0;
+  }
+
+  /* ── TABLE ── */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 14px 0; }
+  .tbl th { background: var(--text); color: white; padding: 10px 14px; text-align: left; }
+  .tbl td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .tbl tr:hover td { background: #f5f3f0; }
+  .tbl .dur-cell { color: var(--dur-dark); font-weight: 700; }
+  .tbl .moll-cell { color: var(--moll-dark); font-weight: 700; }
+
+  /* ── TOOLTIP ── */
+  [data-tip] { position: relative; cursor: help; text-decoration: underline dotted; }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1612;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+  }
+  [data-tip]:hover::after { opacity: 1; }
+
+  /* ── ACCORDION ── */
+  .accordion-item { border: 1.5px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .accordion-header {
+    width: 100%;
+    padding: 14px 18px;
+    background: white;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+  }
+  .accordion-header:hover { background: #f5f3f0; }
+  .accordion-body { display: none; padding: 14px 18px; background: #faf8f5; font-size: 0.92rem; }
+  .accordion-body.open { display: block; }
+  .accordion-arrow { transition: transform 0.3s; }
+  .accordion-header.open .accordion-arrow { transform: rotate(180deg); }
+
+  /* ── STICKER / BADGE ── */
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+  .badge.easy { background: #d1fae5; color: #065f46; }
+  .badge.medium { background: #fef3c7; color: #92400e; }
+  .badge.hard { background: #fee2e2; color: #991b1b; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    header h1 { font-size: 1.5rem; }
+    .card { padding: 16px; }
+    .step { width: 38px; height: 38px; font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎵 <span class="dur">Dur</span> & <span class="moll">Moll</span></h1>
+  <p>Interaktives Lernmodul · Klasse 8 · 90 Minuten</p>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="mainProgress"></div></div>
+  <div class="timer-wrap">⏱ Verstrichene Zeit: <span id="timerDisplay">00:00</span></div>
+</header>
+
+<nav class="tabs" id="tabNav">
+  <button class="tab-btn active" onclick="showSection('intro',0)" data-idx="0"><span class="tab-icon">🏠</span>Einstieg</button>
+  <button class="tab-btn" onclick="showSection('theorie',1)" data-idx="1"><span class="tab-icon">📖</span>Theorie</button>
+  <button class="tab-btn" onclick="showSection('klavier',2)" data-idx="2"><span class="tab-icon">🎹</span>Klavier</button>
+  <button class="tab-btn" onclick="showSection('hoeren',3)" data-idx="3"><span class="tab-icon">👂</span>Hören</button>
+  <button class="tab-btn" onclick="showSection('uebung1',4)" data-idx="4"><span class="tab-icon">✏️</span>Übung 1</button>
+  <button class="tab-btn" onclick="showSection('uebung2',5)" data-idx="5"><span class="tab-icon">🧩</span>Übung 2</button>
+  <button class="tab-btn" onclick="showSection('quiz',6)" data-idx="6"><span class="tab-icon">🏆</span>Quiz</button>
+</nav>
+
+<main>
+
+<!-- ════════════════════════════════════════
+     SECTION 1: EINSTIEG
+════════════════════════════════════════ -->
+<section class="section active" id="intro">
+  <div class="section-header">
+    <div class="section-icon" style="background:#fde68a;">🎵</div>
+    <div>
+      <h2>Willkommen!</h2>
+      <p>ca. 10 Minuten · Einstieg & Motivation</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎭 Fühlt Musik wirklich etwas?</h2>
+    <p>Hör dir zwei kurze Melodien an. Entscheide danach: Welche Stimmung erzeugt jede Melodie?</p>
+    <p><em>Tipp: Schließe die Augen beim Hören.</em></p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin:14px 0;">
+      <button class="play-btn dur" onclick="playScale('dur','C',true)">▶ Melodie A hören</button>
+      <button class="play-btn moll" onclick="playScale('moll','A',true)">▶ Melodie B hören</button>
+    </div>
+    <canvas id="waveform-canvas"></canvas>
+
+    <p><strong>Wie würdest du die beiden Melodien beschreiben?</strong></p>
+    <div class="emoji-choice" id="moodChoiceA">
+      <div class="emoji-btn" onclick="selectMood('A','happy')">😊<span>fröhlich</span></div>
+      <div class="emoji-btn" onclick="selectMood('A','sad')">😢<span>traurig</span></div>
+      <div class="emoji-btn" onclick="selectMood('A','tense')">😬<span>angespannt</span></div>
+      <div class="emoji-btn" onclick="selectMood('A','peaceful')">😌<span>ruhig</span></div>
+    </div>
+    <div id="moodFeedbackA" style="display:none; margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
+    <h2>🎯 Lernziele dieser Stunde</h2>
+    <ul>
+      <li>Du kannst <strong>Dur</strong> und <strong>Moll</strong> als Tongeschlechter beschreiben.</li>
+      <li>Du kennst den Aufbau einer <strong>Durtonleiter</strong> und einer <strong>Molltonleiter</strong>.</li>
+      <li>Du erkennst den Unterschied zwischen Dur und Moll <strong>beim Hören</strong>.</li>
+      <li>Du kannst Noten und Beispiele richtig zuordnen.</li>
+    </ul>
+    <div style="margin-top:16px;">
+      <button class="btn-primary" onclick="showSection('theorie',1)">Los geht's! →</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 2: THEORIE
+════════════════════════════════════════ -->
+<section class="section" id="theorie">
+  <div class="section-header">
+    <div class="section-icon" style="background:#dbeafe;">📖</div>
+    <div>
+      <h2>Theorie</h2>
+      <p>ca. 20 Minuten · Erklärungen & Hintergründe</p>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="dur-card">
+      <h3>☀️ Dur</h3>
+      <p>Lateinisch <em>„durus"</em> = hart, klar</p>
+      <ul style="padding-left:16px; margin-top:8px;">
+        <li>Klingt <strong>hell, fröhlich, kraftvoll</strong></li>
+        <li>Große Terz über dem Grundton</li>
+        <li>Typisch: Hymnen, Märsche, Popsongs</li>
+      </ul>
+    </div>
+    <div class="moll-card">
+      <h3>🌙 Moll</h3>
+      <p>Lateinisch <em>„mollis"</em> = weich, mild</p>
+      <ul style="padding-left:16px; margin-top:8px;">
+        <li>Klingt <strong>dunkel, traurig, geheimnisvoll</strong></li>
+        <li>Kleine Terz über dem Grundton</li>
+        <li>Typisch: Balladen, Filmmusik, Blues</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🏗️ Aufbau der Durtonleiter</h2>
+    <p>Eine Durtonleiter besteht aus 8 Tönen (Oktave) mit diesem festen Muster an <data-tip="Ganzer Ton = 2 Halbtöne, Halbton = kleinster Schritt">Ganz- und Halbtönen</data-tip>:</p>
+    <div class="info-box dur" style="margin:14px 0;">
+      <strong>Formel: G – G – H – G – G – G – H</strong>
+      G = Ganzton (2 Halbtöne) · H = Halbton (1 Halbton)
+    </div>
+
+    <h3>Beispiel: C-Dur</h3>
+    <div class="scale-steps" id="scaleStepsDur">
+      <!-- Generated by JS -->
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <button class="play-btn dur" onclick="playScale('dur','C',false)">▶ C-Dur abspielen</button>
+      <button class="play-btn dur" onclick="playScale('dur','G',false)">▶ G-Dur abspielen</button>
+      <button class="play-btn dur" onclick="playScale('dur','F',false)">▶ F-Dur abspielen</button>
+    </div>
+
+    <h3 style="margin-top:20px;">Weitere Durtonleitern</h3>
+    <table class="tbl">
+      <tr><th>Tonleiter</th><th>Töne</th></tr>
+      <tr><td class="dur-cell">G-Dur</td><td>G – A – H – C – D – E – Fis – G</td></tr>
+      <tr><td class="dur-cell">D-Dur</td><td>D – E – Fis – G – A – H – Cis – D</td></tr>
+      <tr><td class="dur-cell">F-Dur</td><td>F – G – A – B – C – D – E – F</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>🏗️ Aufbau der Molltonleiter</h2>
+    <p>Die <strong>natürliche Molltonleiter</strong> hat ein anderes Muster:</p>
+    <div class="info-box" style="margin:14px 0;">
+      <strong>Formel: G – H – G – G – H – G – G</strong>
+      Der entscheidende Unterschied: Die Terz (3. Stufe) ist um einen Halbton tiefer!
+    </div>
+
+    <h3>Beispiel: a-Moll</h3>
+    <div class="scale-steps" id="scaleStepsMoll">
+      <!-- Generated by JS -->
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <button class="play-btn moll" onclick="playScale('moll','A',false)">▶ a-Moll abspielen</button>
+      <button class="play-btn moll" onclick="playScale('moll','E',false)">▶ e-Moll abspielen</button>
+      <button class="play-btn moll" onclick="playScale('moll','D',false)">▶ d-Moll abspielen</button>
+    </div>
+
+    <div class="info-box" style="margin-top:16px;">
+      <strong>💡 Paralleltonarten</strong>
+      C-Dur und a-Moll teilen sich alle dieselben Töne (keine Vorzeichen). Man nennt sie <em>Paralleltonarten</em>. Der Unterschied liegt nur im Grundton!
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎼 Dreiklänge: Das Herzstück</h2>
+    <p>Der wichtigste Unterschied zwischen Dur und Moll liegt im <strong>Dreiklang</strong> – den 3 Tönen, die gleichzeitig gespielt werden.</p>
+    <div class="split">
+      <div class="dur-card">
+        <h3>Dur-Dreiklang</h3>
+        <p>Grundton + <strong>Große Terz</strong> (4 Halbtöne) + Quinte</p>
+        <p style="margin-top:8px;">C-Dur: <strong>C – E – G</strong></p>
+        <button class="play-btn dur" onclick="playChord('dur')" style="margin-top:10px;">▶ Hören</button>
+      </div>
+      <div class="moll-card">
+        <h3>Moll-Dreiklang</h3>
+        <p>Grundton + <strong>Kleine Terz</strong> (3 Halbtöne) + Quinte</p>
+        <p style="margin-top:8px;">a-Moll: <strong>A – C – E</strong></p>
+        <button class="play-btn moll" onclick="playChord('moll')" style="margin-top:10px;">▶ Hören</button>
+      </div>
+    </div>
+
+    <div class="info-box dur" style="margin-top:16px;">
+      <strong>🔑 Merksatz</strong>
+      „Dur klingt DUR-ch und fröhlich, Moll klingt sanfter und dunkel."
+    </div>
+
+    <h3 style="margin-top:16px;">FAQ – Häufige Fragen</h3>
+    <div class="accordion-item">
+      <button class="accordion-header" onclick="toggleAccordion(this)">Warum heißt es C-Dur, aber a-Moll (Kleinbuchstabe)? <span class="accordion-arrow">▾</span></button>
+      <div class="accordion-body">In der Musiktheorie schreibt man Durtonarten mit großem Buchstaben (C, G, D...) und Molltonarten mit kleinem Buchstaben (a, e, d...). Das ist eine internationale Konvention.</div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-header" onclick="toggleAccordion(this)">Gibt es nur natürliches Moll? <span class="accordion-arrow">▾</span></button>
+      <div class="accordion-body">Nein! Es gibt drei Mollformen: natürliches, harmonisches und melodisches Moll. In der Klasse 8 lernt ihr hauptsächlich das natürliche Moll. Harmonisches Moll hat eine erhöhte 7. Stufe und klingt orientalisch.</div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-header" onclick="toggleAccordion(this)">Ist Dur immer fröhlich und Moll immer traurig? <span class="accordion-arrow">▾</span></button>
+      <div class="accordion-body">Nicht unbedingt! Das ist eine kulturelle Prägung. In anderen Kulturen (z.B. traditionelle russische oder balkanische Musik) ist Moll nicht zwangsläufig traurig. Tempo, Rhythmus und Text spielen ebenfalls eine große Rolle.</div>
+    </div>
+
+    <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="showSection('intro',0)">← Zurück</button>
+      <button class="btn-primary" onclick="showSection('klavier',2)">Weiter zum Klavier →</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 3: KLAVIERTASTATUR
+════════════════════════════════════════ -->
+<section class="section" id="klavier">
+  <div class="section-header">
+    <div class="section-icon" style="background:#fce7f3;">🎹</div>
+    <div>
+      <h2>Interaktives Klavier</h2>
+      <p>ca. 15 Minuten · Töne erforschen</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎹 Spiele auf der Klaviatur</h2>
+    <p>Tippe auf die Tasten, um Töne zu erzeugen. Nutze die Buttons, um Tonleitern einzufärben.</p>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 10px;">
+      <button class="play-btn dur" onclick="highlightScale('dur','C')">🌟 C-Dur markieren</button>
+      <button class="play-btn moll" onclick="highlightScale('moll','A')">🌙 a-Moll markieren</button>
+      <button class="btn-secondary" onclick="clearHighlight()">✕ Markierung löschen</button>
+    </div>
+
+    <div class="piano-wrap">
+      <div class="piano" id="piano"></div>
+    </div>
+
+    <p style="font-size:0.8rem; color:var(--text-light); margin-top:6px;">🟡 = Dur-Töne &nbsp;|&nbsp; 🔵 = Moll-Töne &nbsp;|&nbsp; Dunkler = Grundton</p>
+  </div>
+
+  <div class="card">
+    <h2>🔍 Entdecke den Unterschied</h2>
+    <p>Spiele folgende Aufgaben auf der Tastatur:</p>
+    <ol style="padding-left:20px; line-height:2.4;">
+      <li>Spiele <strong>C-Dur</strong>: C – E – G gleichzeitig (Dreiklang). Dann klicke auf „C-Dur markieren".</li>
+      <li>Spiele <strong>a-Moll</strong>: A – C – E gleichzeitig. Welche Taste unterscheidet sich?</li>
+      <li>Vergleiche <strong>E</strong> (in C-Dur) mit <strong>C</strong> (in a-Moll): Das ist der entscheidende Halbtonunterschied!</li>
+    </ol>
+
+    <div class="info-box dur" style="margin-top:12px;">
+      <strong>💡 Der Trick</strong>
+      Wenn du in einem Durakkord die mittlere Note (Terz) um einen Halbton senkst, erhältst du den Mollakkord!<br>
+      C-Dur (C–E–G) → c-Moll (C–Es–G)
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+      <button class="play-btn neutral" onclick="playChordSeq()">▶ C-Dur → c-Moll vergleichen</button>
+    </div>
+
+    <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="showSection('theorie',1)">← Zurück</button>
+      <button class="btn-primary" onclick="showSection('hoeren',3)">Weiter zum Hören →</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 4: HÖRÜBUNGEN
+════════════════════════════════════════ -->
+<section class="section" id="hoeren">
+  <div class="section-header">
+    <div class="section-icon" style="background:#d1fae5;">👂</div>
+    <div>
+      <h2>Hörübungen</h2>
+      <p>ca. 15 Minuten · Erkennen durch Zuhören</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>👂 Dur oder Moll? – Hörtraining</h2>
+    <p>Höre die Melodie und entscheide: <strong>Dur oder Moll?</strong></p>
+    <p id="hoerRunde" style="font-size:0.85rem; color:var(--text-light);">Aufgabe 1 von 6</p>
+
+    <div id="hoerPlayArea" style="margin:16px 0;">
+      <button class="play-btn neutral" id="hoerPlayBtn" onclick="playHoerExample()">▶ Melodie abspielen</button>
+    </div>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;" id="hoerBtns">
+      <button class="play-btn dur" onclick="answerHoer('dur')">☀️ Das ist Dur!</button>
+      <button class="play-btn moll" onclick="answerHoer('moll')">🌙 Das ist Moll!</button>
+    </div>
+    <div id="hoerFeedback" class="quiz-feedback"></div>
+
+    <div style="margin-top:16px;" id="hoerNextArea" style="display:none;">
+      <button class="btn-primary" id="hoerNextBtn" onclick="nextHoer()" style="display:none;">Nächste Aufgabe →</button>
+    </div>
+
+    <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="showSection('klavier',2)">← Zurück</button>
+      <button class="btn-primary" onclick="showSection('uebung1',4)">Zu Übung 1 →</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 5: ÜBUNG 1 (Lückentext + Zuordnung)
+════════════════════════════════════════ -->
+<section class="section" id="uebung1">
+  <div class="section-header">
+    <div class="section-icon" style="background:#fef3c7;">✏️</div>
+    <div>
+      <h2>Übung 1</h2>
+      <p>ca. 15 Minuten · Lückentext & Zuordnung</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+      <h2>📝 Lückentext</h2>
+      <span class="badge easy">🟢 Leicht</span>
+    </div>
+    <p>Fülle die Lücken mit den richtigen Begriffen aus:</p>
+    <p style="font-size:0.8rem; color:var(--text-light); margin-bottom:12px;">Wörter: <strong>Dur · Moll · Halbton · Ganzton · Terz · Paralleltonarten · Quinte</strong></p>
+
+    <div class="fill-blank">
+      1. Musik, die hell und fröhlich klingt, steht meist in
+      <input type="text" class="blank-input" id="b1" placeholder="..."> .
+
+      <br><br>2. Das Wort „Moll" kommt vom lateinischen Wort „mollis" und bedeutet
+      <input type="text" class="blank-input" id="b2" placeholder="..." style="width:120px"> (= weich).
+
+      <br><br>3. Der Abstand zwischen C und E in C-Dur beträgt eine große
+      <input type="text" class="blank-input" id="b3" placeholder="..."> .
+
+      <br><br>4. In der Durtonleiter folgen Ganz- und Halbtöne in der Reihenfolge:
+      G–G–H–G–G–G–H. Das „H" steht für
+      <input type="text" class="blank-input" id="b4" placeholder="..."> .
+
+      <br><br>5. C-Dur und a-Moll heißen
+      <input type="text" class="blank-input" id="b5" placeholder="..." style="width:160px"> ,
+      weil sie dieselben Töne verwenden.
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+      <button class="btn-primary" onclick="checkBlanks()">Antworten prüfen ✓</button>
+      <button class="btn-secondary" onclick="resetBlanks()">Zurücksetzen</button>
+    </div>
+    <div id="blanksResult" style="margin-top:12px; display:none; padding:12px 16px; border-radius:10px;"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+      <h2>🧲 Zuordnungsübung</h2>
+      <span class="badge medium">🟡 Mittel</span>
+    </div>
+    <p>Ziehe (oder tippe) jeden Begriff in die richtige Spalte:</p>
+
+    <div id="dragPool" style="display:flex; flex-wrap:wrap; gap:8px; background:#f5f3f0; border-radius:12px; padding:14px; margin:14px 0; min-height:50px;">
+      <!-- Chips generated by JS -->
+    </div>
+
+    <div class="drag-container">
+      <div class="drag-target dur-t" id="dropDur">
+        <h4>☀️ Dur</h4>
+      </div>
+      <div class="drag-target moll-t" id="dropMoll">
+        <h4>🌙 Moll</h4>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+      <button class="btn-primary" onclick="checkDrag()">Prüfen ✓</button>
+      <button class="btn-secondary" onclick="resetDrag()">Zurücksetzen</button>
+    </div>
+    <div id="dragResult" class="drag-check-result"></div>
+
+    <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="showSection('hoeren',3)">← Zurück</button>
+      <button class="btn-primary" onclick="showSection('uebung2',5)">Weiter zu Übung 2 →</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 6: ÜBUNG 2 (Schwieriger)
+════════════════════════════════════════ -->
+<section class="section" id="uebung2">
+  <div class="section-header">
+    <div class="section-icon" style="background:#ede9fe;">🧩</div>
+    <div>
+      <h2>Übung 2</h2>
+      <p>ca. 15 Minuten · Fortgeschrittene Aufgaben</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+      <h2>🔢 Tonleitern analysieren</h2>
+      <span class="badge medium">🟡 Mittel</span>
+    </div>
+    <p>Bestimme, ob die folgenden Tonfolgen zu Dur oder Moll gehören:</p>
+
+    <div id="analyzeQuestions"></div>
+    <div style="margin-top:12px; display:flex; gap:10px;">
+      <button class="btn-primary" onclick="checkAnalyze()">Prüfen ✓</button>
+      <button class="btn-secondary" onclick="resetAnalyze()">Zurücksetzen</button>
+    </div>
+    <div id="analyzeResult" style="margin-top:12px; display:none; padding:12px 16px; border-radius:10px;"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+      <h2>🎼 Dreiklänge bauen</h2>
+      <span class="badge hard">🔴 Schwer</span>
+    </div>
+    <p>Baue folgende Dreiklänge, indem du die Töne aus dem Kasten auswählst:</p>
+
+    <div id="chordBuilder"></div>
+
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn-primary" onclick="checkChords()">Dreiklänge prüfen ✓</button>
+      <button class="btn-secondary" onclick="resetChords()">Zurücksetzen</button>
+    </div>
+    <div id="chordResult" style="margin-top:12px; display:none; padding:12px 16px; border-radius:10px;"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+      <h2>🎵 Kreativaufgabe</h2>
+      <span class="badge hard">🔴 Schwer</span>
+    </div>
+    <p>Beschreibe in eigenen Worten: Welche Situation oder Geschichte passt zu C-Dur, welche zu a-Moll?</p>
+    <textarea id="kreativText" style="width:100%; height:100px; border-radius:10px; border:1.5px solid var(--border); padding:12px; font-family:'Source Sans 3',sans-serif; font-size:0.95rem; resize:vertical; outline:none; margin-top:10px;" placeholder="Schreibe hier deine Ideen..."></textarea>
+    <button class="btn-primary" onclick="showKreativFeedback()" style="margin-top:10px;">Auswerten lassen 🤖</button>
+    <div id="kreativFeedback" style="margin-top:12px;"></div>
+
+    <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="showSection('uebung1',4)">← Zurück</button>
+      <button class="btn-primary" onclick="showSection('quiz',6)">Zum Quiz →</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 7: QUIZ
+════════════════════════════════════════ -->
+<section class="section" id="quiz">
+  <div class="section-header">
+    <div class="section-icon" style="background:#fee2e2;">🏆</div>
+    <div>
+      <h2>Abschluss-Quiz</h2>
+      <p>ca. 15 Minuten · 10 Fragen · alle Schwierigkeiten</p>
+    </div>
+  </div>
+
+  <div class="card" id="quizCard">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div id="quizBadge"></div>
+      <div class="score-display">⭐ <span id="scoreDisplay">0</span> Punkte</div>
+    </div>
+    <div id="quizContent">
+      <!-- Quiz rendered by JS -->
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════
+// AUDIO ENGINE (Web Audio API)
+// ══════════════════════════════════════════════════
+let audioCtx = null;
+let animFrame = null;
+let waveAnalyser = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function freqFromNote(note, octave=4) {
+  const notes = {'C':0,'Cis':1,'D':2,'Dis':2,'Es':3,'E':4,'F':5,'Fis':6,'Ges':6,'G':7,'Gis':7,'As':8,'A':9,'B':10,'H':11};
+  const n = notes[note];
+  return 440 * Math.pow(2, (n - 9 + (octave - 4) * 12) / 12);
+}
+
+function playTone(freq, startTime, duration, ctx, vol=0.3, waveType='sine') {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.type = waveType;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+  gain.gain.setValueAtTime(vol, startTime + duration - 0.05);
+  gain.gain.linearRampToValueAtTime(0, startTime + duration);
+  osc.start(startTime);
+  osc.stop(startTime + duration);
+}
+
+const durScales = {
+  'C': ['C','D','E','F','G','A','H','C'],
+  'G': ['G','A','H','C','D','E','Fis','G'],
+  'F': ['F','G','A','B','C','D','E','F'],
+};
+const mollScales = {
+  'A': ['A','H','C','D','E','F','G','A'],
+  'E': ['E','Fis','G','A','H','C','D','E'],
+  'D': ['D','E','F','G','A','B','C','D'],
+};
+
+function playScale(type, root, melody=false) {
+  const ctx = getAudioCtx();
+  const scale = type === 'dur' ? (durScales[root]||durScales['C']) : (mollScales[root]||mollScales['A']);
+  const oct = root === 'A' || root === 'E' || root === 'D' ? 3 : 4;
+  const now = ctx.currentTime + 0.05;
+  const step = melody ? 0.28 : 0.22;
+  scale.forEach((note, i) => {
+    const o = (i === 7) ? oct+1 : oct;
+    const freq = freqFromNote(note, o);
+    playTone(freq, now + i * step, step * 0.9, ctx, 0.25);
+  });
+  drawWaveform();
+}
+
+function playChord(type) {
+  const ctx = getAudioCtx();
+  const now = ctx.currentTime + 0.05;
+  let notes;
+  if (type === 'dur') notes = [{n:'C',o:4},{n:'E',o:4},{n:'G',o:4}];
+  else if (type === 'moll') notes = [{n:'A',o:3},{n:'C',o:4},{n:'E',o:4}];
+  notes.forEach(({n,o}) => playTone(freqFromNote(n,o), now, 1.5, ctx, 0.2));
+  drawWaveform();
+}
+
+function playChordSeq() {
+  const ctx = getAudioCtx();
+  const now = ctx.currentTime + 0.05;
+  // C-Dur
+  [{n:'C',o:4},{n:'E',o:4},{n:'G',o:4}].forEach(({n,o}) => playTone(freqFromNote(n,o), now, 1.2, ctx, 0.2));
+  // c-Moll (Es statt E)
+  [{n:'C',o:4},{n:'Es',o:4},{n:'G',o:4}].forEach(({n,o}) => playTone(freqFromNote(n,o), now+1.6, 1.5, ctx, 0.2));
+  drawWaveform();
+}
+
+// Waveform canvas visualizer
+function drawWaveform() {
+  const canvas = document.getElementById('waveform-canvas');
+  if (!canvas) return;
+  const ctx2d = canvas.getContext('2d');
+  const w = canvas.width = canvas.offsetWidth;
+  const h = canvas.height = 60;
+
+  let t = 0;
+  function frame() {
+    t += 0.04;
+    ctx2d.fillStyle = '#1a1612';
+    ctx2d.fillRect(0, 0, w, h);
+    ctx2d.beginPath();
+    ctx2d.strokeStyle = '#e8a020';
+    ctx2d.lineWidth = 2;
+    for (let x = 0; x < w; x++) {
+      const y = h/2 + Math.sin(x * 0.05 + t) * 12 + Math.sin(x * 0.03 + t*1.3) * 6;
+      x === 0 ? ctx2d.moveTo(x,y) : ctx2d.lineTo(x,y);
+    }
+    ctx2d.stroke();
+    animFrame = requestAnimationFrame(frame);
+    if (t > 8) { cancelAnimationFrame(animFrame); ctx2d.fillStyle='#1a1612'; ctx2d.fillRect(0,0,w,h); }
+  }
+  if (animFrame) cancelAnimationFrame(animFrame);
+  frame();
+}
+
+// ══════════════════════════════════════════════════
+// PIANO KEYBOARD
+// ══════════════════════════════════════════════════
+const PIANO_NOTES = [
+  {type:'w', note:'C', oct:4}, {type:'b', note:'Cis', oct:4},
+  {type:'w', note:'D', oct:4}, {type:'b', note:'Dis', oct:4},
+  {type:'w', note:'E', oct:4}, {type:'w', note:'F', oct:4},
+  {type:'b', note:'Fis', oct:4}, {type:'w', note:'G', oct:4},
+  {type:'b', note:'Gis', oct:4}, {type:'w', note:'A', oct:4},
+  {type:'b', note:'B', oct:4}, {type:'w', note:'H', oct:4},
+  {type:'w', note:'C', oct:5}
+];
+
+const noteNames = {'C':'C','Cis':'C#','D':'D','Dis':'D#','Es':'Eb','E':'E','F':'F','Fis':'F#','G':'G','Gis':'G#','As':'Ab','A':'A','B':'Bb','H':'H'};
+
+function buildPiano() {
+  const container = document.getElementById('piano');
+  if (!container) return;
+  container.innerHTML = '';
+  container.style.position = 'relative';
+
+  let whiteIndex = 0;
+  const whites = PIANO_NOTES.filter(n => n.type === 'w');
+  const blacks = PIANO_NOTES.filter(n => n.type === 'b');
+
+  // White keys
+  whites.forEach((n, i) => {
+    const key = document.createElement('div');
+    key.className = 'white-key';
+    key.dataset.note = n.note;
+    key.dataset.oct = n.oct;
+    key.dataset.wIdx = i;
+    key.innerHTML = `<span>${noteNames[n.note]}</span>`;
+    key.addEventListener('pointerdown', () => { playPianoKey(n.note, n.oct); key.classList.add('pressed'); });
+    key.addEventListener('pointerup', () => key.classList.remove('pressed'));
+    key.addEventListener('pointerleave', () => key.classList.remove('pressed'));
+    container.appendChild(key);
+  });
+
+  // Black keys
+  const blackPositions = [0.7, 1.7, 3.7, 4.7, 5.7]; // offset in white-key widths
+  const blackNotes = PIANO_NOTES.filter(n => n.type === 'b');
+  blackPositions.forEach((pos, i) => {
+    if (i >= blackNotes.length) return;
+    const n = blackNotes[i];
+    const key = document.createElement('div');
+    key.className = 'black-key';
+    key.dataset.note = n.note;
+    key.dataset.oct = n.oct;
+    key.style.left = (pos * 44 + 16) + 'px';
+    key.addEventListener('pointerdown', () => { playPianoKey(n.note, n.oct); key.classList.add('pressed'); });
+    key.addEventListener('pointerup', () => key.classList.remove('pressed'));
+    key.addEventListener('pointerleave', () => key.classList.remove('pressed'));
+    container.appendChild(key);
+  });
+}
+
+function playPianoKey(note, oct) {
+  const ctx = getAudioCtx();
+  playTone(freqFromNote(note, oct), ctx.currentTime, 0.7, ctx, 0.3, 'triangle');
+}
+
+const durHighlight = {'C':true,'D':true,'E':true,'F':true,'G':true,'A':true,'H':true};
+const mollHighlight = {'A':true,'H':true,'C':true,'D':true,'E':true,'F':true,'G':true};
+
+function highlightScale(type, root) {
+  clearHighlight();
+  const keys = document.querySelectorAll('#piano .white-key');
+  const scale = type === 'dur' ? (durScales[root]||durScales['C']) : (mollScales[root]||mollScales['A']);
+  const rootNote = scale[0];
+  keys.forEach(k => {
+    if (scale.includes(k.dataset.note)) {
+      if (k.dataset.note === rootNote) {
+        k.classList.add(type === 'dur' ? 'root-note' : 'root-moll');
+      } else {
+        k.classList.add(type === 'dur' ? 'dur-note' : 'moll-note');
+      }
+    }
+  });
+}
+
+function clearHighlight() {
+  document.querySelectorAll('#piano .white-key').forEach(k => {
+    k.classList.remove('dur-note','moll-note','root-note','root-moll');
+  });
+}
+
+// ══════════════════════════════════════════════════
+// SCALE STEP VISUALIZER
+// ══════════════════════════════════════════════════
+const durNotes = ['C','D','E','F','G','A','H','C'];
+const mollNotes = ['A','H','C','D','E','F','G','A'];
+const durSteps = ['G','G','H','G','G','G','H'];
+const mollSteps = ['G','H','G','G','H','G','G'];
+
+function buildScaleVisualizer(containerId, notes, steps, type) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = '';
+  const oct = type === 'moll' ? 3 : 4;
+  notes.forEach((note, i) => {
+    if (i < 7) {
+      const div = document.createElement('div');
+      div.className = 'step';
+      div.style.background = type === 'dur' ? (i===0 ? 'var(--dur)' : '#fde68a') : (i===0 ? 'var(--moll)' : '#bfdbfe');
+      div.style.color = i === 0 ? 'white' : '#333';
+      div.style.border = `2px solid ${type === 'dur' ? 'var(--dur)' : 'var(--moll)'}`;
+      div.textContent = note;
+      div.title = `Stufe ${i+1}`;
+      div.onclick = () => {
+        document.querySelectorAll(`#${containerId} .step`).forEach(s => s.classList.remove('active-s'));
+        div.classList.add('active-s');
+        const o = (i === 7 || (type==='moll' && i >= 2)) ? oct : oct;
+        playTone(freqFromNote(note, oct), getAudioCtx().currentTime, 0.5, getAudioCtx(), 0.25);
+      };
+      c.appendChild(div);
+
+      const arrow = document.createElement('div');
+      arrow.className = 'step-arrow';
+      arrow.textContent = steps[i] === 'G' ? '→' : '↗';
+      arrow.title = steps[i] === 'G' ? 'Ganzton' : 'Halbton';
+      arrow.style.color = steps[i] === 'H' ? (type === 'dur' ? 'var(--dur-dark)' : 'var(--moll-dark)') : 'var(--text-light)';
+      c.appendChild(arrow);
+    } else {
+      const div = document.createElement('div');
+      div.className = 'step';
+      div.style.background = type === 'dur' ? (i===0 ? 'var(--dur)' : '#fde68a') : (i===0 ? 'var(--moll)' : '#bfdbfe');
+      div.style.color = i === 0 ? 'white' : '#333';
+      div.style.border = `2px solid ${type === 'dur' ? 'var(--dur)' : 'var(--moll)'}`;
+      div.textContent = note;
+      div.style.opacity = '0.8';
+      c.appendChild(div);
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════
+// MOOD SELECTION
+// ══════════════════════════════════════════════════
+let moodAnswers = {};
+function selectMood(scale, choice) {
+  document.querySelectorAll(`#moodChoiceA .emoji-btn`).forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  moodAnswers[scale] = choice;
+  const fb = document.getElementById(`moodFeedback${scale}`);
+  fb.style.display = 'block';
+  if (scale === 'A') {
+    if (choice === 'happy') fb.innerHTML = '<div class="quiz-feedback correct show">✅ Genau! Melodie A ist C-Dur – klingt hell und fröhlich.</div>';
+    else fb.innerHTML = '<div class="quiz-feedback wrong show">❌ Nochmal hören! Melodie A ist C-Dur (Dur klingt eher fröhlich und klar).</div>';
+  }
+}
+
+// ══════════════════════════════════════════════════
+// HÖRÜBUNGEN
+// ══════════════════════════════════════════════════
+const hoerExamples = [
+  {type:'dur', root:'C', label:'Melodie 1'},
+  {type:'moll', root:'A', label:'Melodie 2'},
+  {type:'dur', root:'G', label:'Melodie 3'},
+  {type:'moll', root:'E', label:'Melodie 4'},
+  {type:'dur', root:'F', label:'Melodie 5'},
+  {type:'moll', root:'D', label:'Melodie 6'},
+];
+let hoerIdx = 0;
+let hoerScore = 0;
+let hoerAnswered = false;
+
+function playHoerExample() {
+  const ex = hoerExamples[hoerIdx];
+  playScale(ex.type, ex.root, true);
+}
+
+function answerHoer(answer) {
+  if (hoerAnswered) return;
+  hoerAnswered = true;
+  const ex = hoerExamples[hoerIdx];
+  const fb = document.getElementById('hoerFeedback');
+  fb.className = 'quiz-feedback show';
+  document.querySelectorAll('#hoerBtns button').forEach(b => b.disabled = true);
+  if (answer === ex.type) {
+    hoerScore++;
+    fb.classList.add('correct');
+    fb.textContent = `✅ Richtig! Das war ${ex.type === 'dur' ? '☀️ Dur' : '🌙 Moll'}.`;
+  } else {
+    fb.classList.add('wrong');
+    fb.textContent = `❌ Leider falsch. Das war ${ex.type === 'dur' ? '☀️ Dur' : '🌙 Moll'}. Achte auf den Charakter der Terz!`;
+  }
+  document.getElementById('hoerNextBtn').style.display = 'inline-flex';
+  document.getElementById('hoerRunde').textContent = `Aufgabe ${hoerIdx+1} von ${hoerExamples.length} · Score: ${hoerScore}/${hoerIdx+1}`;
+}
+
+function nextHoer() {
+  hoerIdx++;
+  hoerAnswered = false;
+  if (hoerIdx >= hoerExamples.length) {
+    const fb = document.getElementById('hoerFeedback');
+    fb.className = 'quiz-feedback correct show';
+    fb.textContent = `🎉 Fertig! Du hast ${hoerScore} von ${hoerExamples.length} Melodien richtig erkannt!`;
+    document.getElementById('hoerNextBtn').style.display = 'none';
+    document.getElementById('hoerBtns').style.display = 'none';
+    document.getElementById('hoerRunde').textContent = `Abgeschlossen · ${hoerScore}/${hoerExamples.length}`;
+    markDone(3);
+    return;
+  }
+  document.getElementById('hoerFeedback').className = 'quiz-feedback';
+  document.getElementById('hoerFeedback').textContent = '';
+  document.querySelectorAll('#hoerBtns button').forEach(b => b.disabled = false);
+  document.getElementById('hoerNextBtn').style.display = 'none';
+  document.getElementById('hoerRunde').textContent = `Aufgabe ${hoerIdx+1} von ${hoerExamples.length}`;
+}
+
+// ══════════════════════════════════════════════════
+// LÜCKENTEXT
+// ══════════════════════════════════════════════════
+const blankAnswers = {b1:'dur',b2:'weich',b3:'terz',b4:'halbton',b5:'paralleltonarten'};
+
+function checkBlanks() {
+  let correct = 0;
+  Object.entries(blankAnswers).forEach(([id, ans]) => {
+    const input = document.getElementById(id);
+    const val = input.value.trim().toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue');
+    const norm = ans.toLowerCase();
+    if (val === norm || val === norm.replace(/ä/g,'ae')) {
+      input.className = 'blank-input correct-in';
+      correct++;
+    } else {
+      input.className = 'blank-input wrong-in';
+    }
+  });
+  const res = document.getElementById('blanksResult');
+  res.style.display = 'block';
+  if (correct === 5) {
+    res.style.background = '#d1fae5'; res.style.color = 'var(--correct)';
+    res.textContent = `✅ Perfekt! Alle 5 Lücken korrekt!`;
+    markDone(4);
+  } else {
+    res.style.background = '#fee2e2'; res.style.color = 'var(--wrong)';
+    res.textContent = `${correct}/5 richtig. Rot markierte Felder nochmals überprüfen.`;
+  }
+}
+
+function resetBlanks() {
+  ['b1','b2','b3','b4','b5'].forEach(id => {
+    const input = document.getElementById(id);
+    input.value = '';
+    input.className = 'blank-input';
+  });
+  document.getElementById('blanksResult').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════
+// DRAG & DROP ZUORDNUNG
+// ══════════════════════════════════════════════════
+const dragItems = [
+  {text:'☀️ hell & fröhlich', correct:'dur'},
+  {text:'🌙 dunkel & traurig', correct:'moll'},
+  {text:'Große Terz', correct:'dur'},
+  {text:'Kleine Terz', correct:'moll'},
+  {text:'C – E – G', correct:'dur'},
+  {text:'A – C – E', correct:'moll'},
+  {text:'Muster: G-G-H-G-G-G-H', correct:'dur'},
+  {text:'Muster: G-H-G-G-H-G-G', correct:'moll'},
+];
+
+let selectedChip = null;
+
+function buildDrag() {
+  const pool = document.getElementById('dragPool');
+  const dropDur = document.getElementById('dropDur');
+  const dropMoll = document.getElementById('dropMoll');
+  if (!pool) return;
+  pool.innerHTML = '<div style="font-size:0.82rem;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;width:100%;margin-bottom:6px;">Begriffe</div>';
+
+  const shuffled = [...dragItems].sort(() => Math.random() - 0.5);
+  shuffled.forEach((item, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'drag-chip';
+    chip.textContent = item.text;
+    chip.dataset.correct = item.correct;
+    chip.dataset.idx = i;
+
+    // Touch/click to move
+    chip.addEventListener('click', () => {
+      if (selectedChip === chip) {
+        chip.style.outline = '';
+        selectedChip = null;
+      } else {
+        if (selectedChip) selectedChip.style.outline = '';
+        selectedChip = chip;
+        chip.style.outline = '2px solid var(--moll)';
+      }
+    });
+    pool.appendChild(chip);
+  });
+
+  [dropDur, dropMoll].forEach(target => {
+    target.addEventListener('click', () => {
+      if (selectedChip) {
+        selectedChip.style.outline = '';
+        const type = target.id === 'dropDur' ? 'dur' : 'moll';
+        selectedChip.classList.add(`placed-${type}`);
+        target.appendChild(selectedChip);
+        selectedChip = null;
+      }
+    });
+  });
+
+  pool.addEventListener('click', () => {
+    if (selectedChip && selectedChip.parentElement !== pool) {
+      selectedChip.style.outline = '';
+      selectedChip.classList.remove('placed-dur','placed-moll');
+      pool.appendChild(selectedChip);
+      selectedChip = null;
+    }
+  });
+}
+
+function checkDrag() {
+  let correct = 0;
+  const durZone = document.getElementById('dropDur');
+  const mollZone = document.getElementById('dropMoll');
+  durZone.querySelectorAll('.drag-chip').forEach(chip => {
+    if (chip.dataset.correct === 'dur') correct++;
+  });
+  mollZone.querySelectorAll('.drag-chip').forEach(chip => {
+    if (chip.dataset.correct === 'moll') correct++;
+  });
+  const res = document.getElementById('dragResult');
+  res.classList.add('show');
+  if (correct === dragItems.length) {
+    res.style.background = '#d1fae5'; res.style.color = 'var(--correct)';
+    res.textContent = `✅ Perfekt! Alle ${dragItems.length} Begriffe richtig zugeordnet!`;
+    markDone(4);
+  } else {
+    res.style.background = '#fee2e2'; res.style.color = 'var(--wrong)';
+    res.textContent = `${correct}/${dragItems.length} richtig. Versuche es nochmal!`;
+  }
+}
+
+function resetDrag() {
+  const pool = document.getElementById('dragPool');
+  document.querySelectorAll('.drag-chip').forEach(chip => {
+    chip.classList.remove('placed-dur','placed-moll');
+    chip.style.outline = '';
+    pool.appendChild(chip);
+  });
+  document.getElementById('dragResult').classList.remove('show');
+  selectedChip = null;
+}
+
+// ══════════════════════════════════════════════════
+// ÜBUNG 2: ANALYSE
+// ══════════════════════════════════════════════════
+const analyzeQ = [
+  {scale:'D – E – F – G – A – B – C – D', answer:'moll', label:'d-Moll'},
+  {scale:'G – A – H – C – D – E – Fis – G', answer:'dur', label:'G-Dur'},
+  {scale:'E – F – G – A – H – C – D – E', answer:'moll', label:'e-Moll'},
+  {scale:'F – G – A – B – C – D – E – F', answer:'dur', label:'F-Dur'},
+];
+
+function buildAnalyze() {
+  const c = document.getElementById('analyzeQuestions');
+  if (!c) return;
+  c.innerHTML = '';
+  analyzeQ.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom:16px; padding:14px; border:1.5px solid var(--border); border-radius:12px; background:white;';
+    div.innerHTML = `
+      <p style="font-weight:600; margin-bottom:10px;">${i+1}. ${q.scale}</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="quiz-opt" onclick="selectAnalyze(this, ${i}, 'dur')" style="width:auto; padding:8px 18px;" data-q="${i}">☀️ Dur</button>
+        <button class="quiz-opt" onclick="selectAnalyze(this, ${i}, 'moll')" style="width:auto; padding:8px 18px;" data-q="${i}">🌙 Moll</button>
+      </div>
+    `;
+    c.appendChild(div);
+  });
+}
+
+const analyzeSelections = {};
+function selectAnalyze(btn, qIdx, answer) {
+  document.querySelectorAll(`[data-q="${qIdx}"]`).forEach(b => {
+    b.style.background='white'; b.style.borderColor='var(--border)'; b.style.color='var(--text)';
+  });
+  btn.style.background = answer === 'dur' ? 'var(--dur-light)' : 'var(--moll-light)';
+  btn.style.borderColor = answer === 'dur' ? 'var(--dur)' : 'var(--moll)';
+  analyzeSelections[qIdx] = answer;
+}
+
+function checkAnalyze() {
+  let correct = 0;
+  analyzeQ.forEach((q, i) => {
+    if (analyzeSelections[i] === q.answer) correct++;
+  });
+  const res = document.getElementById('analyzeResult');
+  res.style.display = 'block';
+  if (correct === analyzeQ.length) {
+    res.style.background = '#d1fae5'; res.style.color = 'var(--correct)';
+    res.textContent = `✅ Alle ${analyzeQ.length} Tonleitern richtig bestimmt!`;
+  } else {
+    res.style.background = '#fee2e2'; res.style.color = 'var(--wrong)';
+    const hint = analyzeQ.filter((q,i) => analyzeSelections[i] !== q.answer).map(q => q.label).join(', ');
+    res.textContent = `${correct}/${analyzeQ.length} richtig. Nochmals ansehen: ${hint}`;
+  }
+}
+
+function resetAnalyze() {
+  Object.keys(analyzeSelections).forEach(k => delete analyzeSelections[k]);
+  document.querySelectorAll('[data-q]').forEach(b => {
+    b.style.background='white'; b.style.borderColor='var(--border)'; b.style.color='var(--text)';
+  });
+  document.getElementById('analyzeResult').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════
+// ÜBUNG 2: DREIKLÄNGE BAUEN
+// ══════════════════════════════════════════════════
+const chordTasks = [
+  {label:'G-Dur Dreiklang', options:['G','A','H','C','D','E','Fis'], correct:['G','H','D'], hint:'G–H–D'},
+  {label:'e-Moll Dreiklang', options:['E','F','Fis','G','A','H','C','D'], correct:['E','G','H'], hint:'E–G–H'},
+];
+const chordSelections = {};
+
+function buildChords() {
+  const c = document.getElementById('chordBuilder');
+  if (!c) return;
+  c.innerHTML = '';
+  chordTasks.forEach((task, ti) => {
+    chordSelections[ti] = [];
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom:20px; padding:16px; border:1.5px solid var(--border); border-radius:12px; background:white;';
+    let optsHtml = task.options.map(note =>
+      `<button class="drag-chip" id="chord-${ti}-${note}" onclick="toggleChordNote(${ti},'${note}')">${note}</button>`
+    ).join('');
+    div.innerHTML = `
+      <p style="font-weight:700; margin-bottom:10px;">${task.label}</p>
+      <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:10px;">Wähle die 3 richtigen Töne:</p>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">${optsHtml}</div>
+      <p id="chord-sel-${ti}" style="margin-top:10px; font-size:0.88rem; color:var(--text-light);">Ausgewählt: –</p>
+    `;
+    c.appendChild(div);
+  });
+}
+
+function toggleChordNote(ti, note) {
+  const sel = chordSelections[ti];
+  const btn = document.getElementById(`chord-${ti}-${note}`);
+  if (sel.includes(note)) {
+    chordSelections[ti] = sel.filter(n => n !== note);
+    btn.classList.remove('placed-dur');
+    btn.style.background = '';
+  } else if (sel.length < 3) {
+    chordSelections[ti].push(note);
+    btn.classList.add('placed-dur');
+  }
+  const p = document.getElementById(`chord-sel-${ti}`);
+  p.textContent = 'Ausgewählt: ' + (chordSelections[ti].length ? chordSelections[ti].join(' – ') : '–');
+}
+
+function checkChords() {
+  let allCorrect = true;
+  chordTasks.forEach((task, ti) => {
+    const sel = chordSelections[ti].sort().join(',');
+    const cor = [...task.correct].sort().join(',');
+    if (sel !== cor) allCorrect = false;
+  });
+  const res = document.getElementById('chordResult');
+  res.style.display = 'block';
+  if (allCorrect) {
+    res.style.background = '#d1fae5'; res.style.color = 'var(--correct)';
+    res.textContent = '✅ Beide Dreiklänge korrekt! Ausgezeichnet!';
+    markDone(5);
+  } else {
+    res.style.background = '#fee2e2'; res.style.color = 'var(--wrong)';
+    const hints = chordTasks.map((t,i) => {
+      const sel = chordSelections[i].sort().join(',');
+      const cor = [...t.correct].sort().join(',');
+      return sel === cor ? null : `${t.label}: richtig wäre ${t.hint}`;
+    }).filter(Boolean).join(' · ');
+    res.textContent = `Noch nicht ganz: ${hints}`;
+  }
+}
+
+function resetChords() {
+  chordTasks.forEach((t, ti) => {
+    chordSelections[ti] = [];
+    t.options.forEach(note => {
+      const btn = document.getElementById(`chord-${ti}-${note}`);
+      if (btn) { btn.classList.remove('placed-dur'); btn.style.background = ''; }
+    });
+    const p = document.getElementById(`chord-sel-${ti}`);
+    if (p) p.textContent = 'Ausgewählt: –';
+  });
+  document.getElementById('chordResult').style.display = 'none';
+}
+
+// Kreativaufgabe
+function showKreativFeedback() {
+  const txt = document.getElementById('kreativText').value.trim();
+  const fb = document.getElementById('kreativFeedback');
+  if (txt.length < 20) {
+    fb.innerHTML = '<div class="quiz-feedback wrong show">Schreibe etwas mehr – mindestens 1-2 Sätze!</div>';
+    return;
+  }
+  fb.innerHTML = `<div class="quiz-feedback correct show">✅ Gut gemacht! Deine Beschreibung zeigt, dass du den emotionalen Unterschied zwischen Dur und Moll verstehst. Es gibt keine falsche Antwort – wichtig ist, dass du eigene Assoziationen entwickelst.</div>`;
+}
+
+// ══════════════════════════════════════════════════
+// QUIZ
+// ══════════════════════════════════════════════════
+const quizData = [
+  {
+    difficulty:'easy', badge:'🟢 Leicht',
+    question:'Was bedeutet das Wort „Dur" auf Lateinisch?',
+    options:['weich','hell','hart/klar','dunkel'],
+    correct:2,
+    explanation:'„Durus" bedeutet auf Lateinisch „hart" oder „klar".'
+  },
+  {
+    difficulty:'easy', badge:'🟢 Leicht',
+    question:'Welche Stimmung erzeugt Moll typischerweise?',
+    options:['fröhlich und hell','dunkel und traurig','laut und kraftvoll','schnell und aufgeregt'],
+    correct:1,
+    explanation:'Moll klingt typischerweise dunkler und oft trauriger als Dur.'
+  },
+  {
+    difficulty:'easy', badge:'🟢 Leicht',
+    question:'Welche Töne gehören zum C-Dur-Dreiklang?',
+    options:['C – D – E','C – E – G','C – E – A','C – F – G'],
+    correct:1,
+    explanation:'Der C-Dur-Dreiklang besteht aus Grundton (C), großer Terz (E) und Quinte (G).'
+  },
+  {
+    difficulty:'medium', badge:'🟡 Mittel',
+    question:'Welches Stufenmuster hat eine Durtonleiter?',
+    options:['G–H–G–G–H–G–G','H–G–G–G–H–G–G','G–G–H–G–G–G–H','G–G–G–H–G–G–H'],
+    correct:2,
+    explanation:'Das Durtonleiter-Muster ist: Ganzton–Ganzton–Halbton–Ganzton–Ganzton–Ganzton–Halbton.'
+  },
+  {
+    difficulty:'medium', badge:'🟡 Mittel',
+    question:'Was sind „Paralleltonarten"?',
+    options:['Tonarten mit dem gleichen Grundton','Tonarten mit denselben Tönen aber unterschiedlichem Grundton','Tonarten mit denselben Vorzeichen und Grundton','Zwei Molltonarten mit ähnlichem Klang'],
+    correct:1,
+    explanation:'Paralleltonarten teilen dieselben Töne (und Vorzeichen), haben aber unterschiedliche Grundtöne. Z.B. C-Dur und a-Moll.'
+  },
+  {
+    difficulty:'medium', badge:'🟡 Mittel',
+    question:'Der Unterschied zwischen Dur- und Moll-Dreiklang liegt hauptsächlich in der...',
+    options:['Quinte','Oktave','Terz','Sekunde'],
+    correct:2,
+    explanation:'Die Terz macht den Unterschied: Dur hat eine große Terz (4 Halbtöne), Moll eine kleine Terz (3 Halbtöne).'
+  },
+  {
+    difficulty:'medium', badge:'🟡 Mittel',
+    question:'Welche Tonleiter hat als Muster G–H–G–G–H–G–G?',
+    options:['C-Dur','G-Dur','a-Moll','d-Moll'],
+    correct:2,
+    explanation:'Das natürliche Moll-Muster ist G–H–G–G–H–G–G. Die Durformel lautet G–G–H–G–G–G–H.'
+  },
+  {
+    difficulty:'hard', badge:'🔴 Schwer',
+    question:'Welcher Ton unterscheidet C-Dur von c-Moll?',
+    options:['G → Ges','C → Ces','E → Es','H → B'],
+    correct:2,
+    explanation:'In c-Moll wird das E zu Es (um einen Halbton erniedrigt). Dadurch entsteht die kleine statt große Terz.'
+  },
+  {
+    difficulty:'hard', badge:'🔴 Schwer',
+    question:'Welcher Dreiklang gehört zu G-Dur?',
+    options:['G – H – D','G – A – H','G – B – D','G – H – E'],
+    correct:0,
+    explanation:'G-Dur: G (Grundton) + H (große Terz, 4 Halbtöne) + D (Quinte, 7 Halbtöne) = G–H–D.'
+  },
+  {
+    difficulty:'hard', badge:'🔴 Schwer',
+    question:'Eine Schülerin spielt: A – H – C – D – E – F – G – A. In welcher Tonleiter befindet sie sich?',
+    options:['A-Dur','G-Dur','a-Moll (natürlich)','d-Moll'],
+    correct:2,
+    explanation:'A–H–C–D–E–F–G–A entspricht dem Muster G–H–G–G–H–G–G – das ist die natürliche a-Moll-Tonleiter.'
+  },
+];
+
+let quizIdx = 0;
+let quizScore = 0;
+let quizAnswered = false;
+
+function renderQuiz() {
+  if (quizIdx >= quizData.length) {
+    showQuizResult();
+    return;
+  }
+  const q = quizData[quizIdx];
+  document.getElementById('quizBadge').innerHTML = `<span class="badge ${q.difficulty}">${q.badge}</span>`;
+  document.getElementById('scoreDisplay').textContent = quizScore;
+  const qc = document.getElementById('quizContent');
+  qc.innerHTML = `
+    <div class="quiz-question">Frage ${quizIdx+1} von ${quizData.length}: ${q.question}</div>
+    <div class="quiz-options">
+      ${q.options.map((opt, i) => `
+        <button class="quiz-opt" onclick="answerQuiz(this, ${i})">${opt}</button>
+      `).join('')}
+    </div>
+    <div class="quiz-feedback" id="qFeedback"></div>
+    <div class="quiz-nav" id="quizNav" style="display:none;">
+      <button class="btn-primary" onclick="nextQuestion()">
+        ${quizIdx+1 < quizData.length ? 'Nächste Frage →' : '🏆 Ergebnis sehen'}
+      </button>
+      <span class="quiz-counter">Frage ${quizIdx+1}/${quizData.length}</span>
+    </div>
+  `;
+  quizAnswered = false;
+}
+
+function answerQuiz(btn, selected) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const q = quizData[quizIdx];
+  const opts = document.querySelectorAll('.quiz-opt');
+  opts.forEach(b => b.disabled = true);
+  const fb = document.getElementById('qFeedback');
+  fb.classList.add('show');
+  if (selected === q.correct) {
+    quizScore++;
+    opts[selected].classList.add('correct');
+    fb.classList.add('correct');
+    fb.textContent = `✅ Richtig! ${q.explanation}`;
+  } else {
+    opts[selected].classList.add('wrong');
+    opts[q.correct].classList.add('correct');
+    fb.classList.add('wrong');
+    fb.textContent = `❌ Leider falsch. ${q.explanation}`;
+  }
+  document.getElementById('scoreDisplay').textContent = quizScore;
+  document.getElementById('quizNav').style.display = 'flex';
+}
+
+function nextQuestion() {
+  quizIdx++;
+  renderQuiz();
+}
+
+function showQuizResult() {
+  const pct = Math.round(quizScore / quizData.length * 100);
+  let medal = '🥉', msg = 'Gut versucht! Lies dir die Theorie nochmals durch.';
+  if (pct >= 90) { medal = '🥇'; msg = 'Herausragend! Du hast Dur und Moll wirklich verstanden!'; }
+  else if (pct >= 70) { medal = '🥈'; msg = 'Super! Nur noch wenige Lücken zu schließen.'; }
+  else if (pct >= 50) { medal = '🥉'; msg = 'Solide Basis! Übe noch die schwierigeren Aufgaben.'; }
+
+  document.getElementById('quizContent').innerHTML = `
+    <div class="result-screen">
+      <div class="medal">${medal}</div>
+      <div class="result-score-big">${quizScore}/${quizData.length}</div>
+      <p style="font-size:1.2rem; font-weight:700; margin-bottom:8px;">${pct}% richtig</p>
+      <p class="result-msg">${msg}</p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button class="btn-primary" onclick="restartQuiz()">🔄 Quiz wiederholen</button>
+        <button class="btn-secondary" onclick="showSection('theorie',1)">📖 Theorie nochmals</button>
+      </div>
+    </div>
+  `;
+  markDone(6);
+  updateProgress();
+}
+
+function restartQuiz() {
+  quizIdx = 0;
+  quizScore = 0;
+  renderQuiz();
+}
+
+// ══════════════════════════════════════════════════
+// NAVIGATION & PROGRESS
+// ══════════════════════════════════════════════════
+const sectionIds = ['intro','theorie','klavier','hoeren','uebung1','uebung2','quiz'];
+const doneSections = new Set([0]); // intro is done by default
+
+function showSection(id, idx) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === idx);
+  });
+  doneSections.add(idx);
+  updateProgress();
+  window.scrollTo(0, 0);
+  if (id === 'quiz' && quizIdx === 0) renderQuiz();
+}
+
+function markDone(idx) {
+  doneSections.add(idx);
+  const btn = document.querySelector(`.tab-btn[data-idx="${idx}"]`);
+  if (btn && !btn.querySelector('.done-mark')) {
+    btn.innerHTML += '<span class="done-mark">✓</span>';
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  const pct = Math.round(doneSections.size / sectionIds.length * 100);
+  document.getElementById('mainProgress').style.width = pct + '%';
+}
+
+// ══════════════════════════════════════════════════
+// ACCORDION
+// ══════════════════════════════════════════════════
+function toggleAccordion(btn) {
+  const body = btn.nextElementSibling;
+  body.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+// ══════════════════════════════════════════════════
+// TIMER
+// ══════════════════════════════════════════════════
+let startTime = Date.now();
+function updateTimer() {
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const m = String(Math.floor(elapsed/60)).padStart(2,'0');
+  const s = String(elapsed % 60).padStart(2,'0');
+  const el = document.getElementById('timerDisplay');
+  if (el) el.textContent = `${m}:${s}`;
+}
+setInterval(updateTimer, 1000);
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  buildPiano();
+  buildScaleVisualizer('scaleStepsDur', durNotes, durSteps, 'dur');
+  buildScaleVisualizer('scaleStepsMoll', mollNotes, mollSteps, 'moll');
+  buildDrag();
+  buildAnalyze();
+  buildChords();
+});
+</script>
+</body>
+</html>
